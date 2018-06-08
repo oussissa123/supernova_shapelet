@@ -261,7 +261,7 @@ public class AllFunctions {
 		}
 		else {
 			Predict ts = new Predict();
-			ts.setObjectID(dt.getTimeSerie().getId());
+			ts.setObjectID(test.getId());
 			ts.setPredictValue(dt.getObject_class());
 			ts.setTrueValue(test.getObject_class());
 			return ts;
