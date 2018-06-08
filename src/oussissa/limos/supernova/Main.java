@@ -12,25 +12,29 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class Main {
-	public static Collection<TimeSerie> data = new ArrayList<>();
-	public static Collection<TimeSerie> test = new ArrayList<>();
+//	public static Collection<TimeSerie> data = new ArrayList<>();
+//	public static Collection<TimeSerie> test = new ArrayList<>();
 	public static int maxLen = 7;
 	public static int minLen = 7;
 	
 	public static void main(String[] args) {
 		
-		
-		
-		//[-8.983, -3.274, -1.051, 3.978, -2.542]
-		readToArray("data/des_train_mini.json", data);
+		List<DecisionTree> trees = new ArrayList<>();
+		Collection<List<TimeSerie>> tests = new ArrayList<>();
+
 		System.out.println("Starting ...");
-		DecisionTree tree = AllFunctions.getTree(data);
+		
+		for(String band:new String []{"g","r","i","z"}) {
+			Collection<TimeSerie> data = readToArray("data/des_train_mini.json", band);
+			trees.add(AllFunctions.getTree(data));
+			tests.add(readToArray("data/des_test_mini.json", band));
+		}
+
 		System.out.println("Training ok ...");
-		readToArray("data/des_test_mini.json", test);
-		List<Boolean> value = AllFunctions.doTest(tree, test);
+		List<Boolean> value = AllFunctions.doTest(trees, tests);
 		System.out.println("Testing ok ...");
 		save("result.text", value.toString() + "\n Accuracy: "+ AllFunctions.computeAccuracy(value)+ "\n Error: "+ AllFunctions.computeError(value));
-		
+
 		
 		/*
 		maxLen = AllFunctions.minlengh(data);
@@ -70,7 +74,8 @@ public class Main {
 		return result;
 	}
 	
-	public static void readToArray(String path, Collection<TimeSerie> d) {
+	public static List<TimeSerie> readToArray(String path, String band) {
+		List<TimeSerie> d = new ArrayList<>();
 		String result = readData(path);
 		JSONObject jo = new JSONObject(result);
 		Iterator<String> keys = jo.keySet().iterator();
@@ -80,13 +85,15 @@ public class Main {
 			
 			TimeSerie ts = new TimeSerie();
 			ts.setId(ke);
-			JSONArray gValues = j1.getJSONObject("z").getJSONArray("fluxcal");
+			JSONArray gValues = j1.getJSONObject(band).getJSONArray("fluxcal");
 			for (int i=0;i<gValues.length();i++) 
 				ts.add(gValues.getDouble(i));
 			int type = (j1.getJSONObject("header").getInt("type")==0)?0:1;
 			ts.setObject_class(type);
 			d.add(ts);
 		}
+		
+		return d;
 	}
 	
 	public static void save(String path, String value) {

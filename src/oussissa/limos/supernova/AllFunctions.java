@@ -251,6 +251,59 @@ public class AllFunctions {
 		return result;
 	}
 	
+	public static Predict doTesting(DecisionTree dt, TimeSerie test){
+		if (dt.getRight()!=null&&dt.getLeft()!=null) { 
+			double distance = subsequenceDistEuclidien(test, dt.getTimeSerie());
+			if (distance<dt.getSplitPoint())
+				return doTesting(dt.getLeft(), test);
+			else
+				return doTesting(dt.getRight(), test);
+		}
+		else {
+			Predict ts = new Predict();
+			ts.setObjectID(dt.getTimeSerie().getId());
+			ts.setPredictValue(dt.getObject_class());
+			ts.setTrueValue(test.getObject_class());
+			return ts;
+		}
+	}
+
+	
+	public static Predict doVote(List<DecisionTree> listDT, List<TimeSerie> next) {
+		Predict predict = new Predict();
+		int compFor0 = 0;
+		for(int i=0;i<listDT.size();i++) {
+			predict = doTesting(listDT.get(0), next.get(0));
+			if (predict.getPredictValue()==0)
+				compFor0++;
+		}
+		double p = Double.valueOf(compFor0)/Double.valueOf(listDT.size());
+		if (p>0.5)
+			predict.setPredictValue(0);
+		else
+			predict.setPredictValue(1);
+		return predict;
+	}
+
+	
+	public static List<Boolean> doTest(List<DecisionTree> listDT, Collection<List<TimeSerie>> dataTest){
+		List<Boolean> result = new ArrayList<>();
+		List<Predict> data = doTesting(listDT, dataTest);
+		for (Predict next:data) 
+			result.add(next.getTrueValue()==next.getPredictValue());
+		return result;
+	}
+	
+	public static List<Predict> doTesting(List<DecisionTree> listDT, Collection<List<TimeSerie>> dataTest){
+		List<Predict> result = new ArrayList<>();
+		Iterator<List<TimeSerie>> data = dataTest.iterator();
+		while (data.hasNext()) {
+			result.add(doVote(listDT, data.next()));
+		}
+		return result;
+	}
+
+
 	public static double computeAccuracy(List<Boolean> result) {
 		double accuracy = 0f;
 		int i = 0;
