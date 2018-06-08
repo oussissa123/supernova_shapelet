@@ -29,9 +29,10 @@ public class Main {
 			trees.add(AllFunctions.getTree(data));
 			tests.add(readToArray("data/des_test_mini.json", band));
 		}
+		
 		System.out.println("Training ok ...");
 		
-		List<Boolean> value = AllFunctions.doTest(trees, tests);
+		List<Boolean> value = AllFunctions.doTest(trees, AllFunctions.transpose(tests));
 		System.out.println("Testing ok ...");
 		save("result.text", value.toString() + "\n Accuracy: "+ AllFunctions.computeAccuracy(value)+ "\n Error: "+ AllFunctions.computeError(value));
 

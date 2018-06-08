@@ -273,7 +273,7 @@ public class AllFunctions {
 		Predict predict = new Predict();
 		int compFor0 = 0;
 		for(int i=0;i<listDT.size();i++) {
-			predict = doTesting(listDT.get(0), next.get(0));
+			predict = doTesting(listDT.get(i), next.get(i));
 			if (predict.getPredictValue()==0)
 				compFor0++;
 		}
@@ -345,6 +345,18 @@ public class AllFunctions {
 		result = new DecisionTree(r, finalValue);
 		result.setLeft(getTree(dt1));
 		result.setRight(getTree(dt2));
+		return result;
+	}
+	
+	public static Collection<List<TimeSerie>> transpose(Collection<List<TimeSerie>> values){
+		Collection<List<TimeSerie>> result = new ArrayList<>();
+		List<List<TimeSerie>> it = new ArrayList<>(values);
+		for(int j=0; j<it.get(0).size();j++) {
+			List<TimeSerie> temp = new ArrayList<>(); 
+			for(int i = 0; i < values.size();i++) 
+				temp.add(it.get(j).get(i));
+			result.add(temp);
+		}
 		return result;
 	}
 	
