@@ -18,21 +18,24 @@ public class Main {
 	public static int minLen = 7;
 	
 	public static void main(String[] args) {
-		//int min = Integer.MAX_VALUE, max = 0;
 		
 		
-		/*
-		Iterator<TimeSerie> times = data.iterator();
-		while (times.hasNext()) {
-			TimeSerie ts = times.next();
-			min = Integer.min(min, ts.size());
-			max = Integer.max(max, ts.size());
-		}
-		System.out.println(min+ "  "+ max);
-		*/
 		
 		//[-8.983, -3.274, -1.051, 3.978, -2.542]
 		readToArray("data/des_train_mini.json", data);
+		System.out.println("Starting ...");
+		DecisionTree tree = AllFunctions.getTree(data);
+		System.out.println("Training ok ...");
+		readToArray("data/des_test_mini.json", test);
+		List<Boolean> value = AllFunctions.doTest(tree, test);
+		System.out.println("Testing ok ...");
+		save("result.text", value.toString() + "\n Accuracy: "+ AllFunctions.computeAccuracy(value)+ "\n Error: "+ AllFunctions.computeError(value));
+		
+		
+		/*
+		maxLen = AllFunctions.minlengh(data);
+		minLen = maxLen;
+		System.out.println(minLen);
 		
 		System.out.println("Starting ...");
 		//long time = System.currentTimeMillis();
@@ -50,7 +53,7 @@ public class Main {
 		}
 		//else
 			///System.out.println(time);
-		System.out.println("End ...");
+		System.out.println("End ...");*/
 	}
 	
 	public static String readData(String path){
@@ -77,7 +80,7 @@ public class Main {
 			
 			TimeSerie ts = new TimeSerie();
 			ts.setId(ke);
-			JSONArray gValues = j1.getJSONObject("g").getJSONArray("fluxcal");
+			JSONArray gValues = j1.getJSONObject("z").getJSONArray("fluxcal");
 			for (int i=0;i<gValues.length();i++) 
 				ts.add(gValues.getDouble(i));
 			int type = (j1.getJSONObject("header").getInt("type")==0)?0:1;

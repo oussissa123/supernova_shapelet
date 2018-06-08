@@ -10,6 +10,17 @@ public class AllFunctions {
 
 	private static double split_dist = 0f;
 	public static double finalValue = 0f;
+	
+	public static List<TimeSerie> dt1 ;
+	public static List<TimeSerie> dt2 ;
+	
+	
+	public static Collection<TimeSerie> d1 ;
+	public static Collection<TimeSerie> d2 ;
+	
+	
+	
+	
 	public static Collection<TimeSerie> generateCandidates(Collection<TimeSerie> data, int maxLen, int minLen){
 		Collection<TimeSerie> result = new ArrayList<>();
 		int l = maxLen;
@@ -37,25 +48,20 @@ public class AllFunctions {
 	}
 	
 	public static  TimeSerie findShapeletBF(Collection<TimeSerie> data, int maxLen, int minLen){
-//		 Random r = new Random();
-//		 int index = r.nextInt(data.size());
-		 TimeSerie result = null;//(new ArrayList<TimeSerie>(data)).get(index);
+		 TimeSerie result = null;
 		 Collection<TimeSerie> candidates = generateCandidates(data, maxLen, minLen);
-		 
-		 //display(candidates);
-		 
-		 
 		 double bsf_gain = 0;
 		 Iterator<TimeSerie> d = candidates.iterator();
-		 System.out.println(candidates.size());
+		 //System.out.println(candidates.size());
 		 while (d.hasNext()) {
 			 TimeSerie val = d.next();
 			double gain = checkCandidate(data, val);
-			//System.out.println(gain);
 			if (gain>bsf_gain) {
 				bsf_gain = gain;
 				result = val;
 				finalValue = split_dist;
+				d1 = new ArrayList<>(dt1);
+				d2 = new ArrayList<>(dt2);
 			}
 		 }
 		 return result;
@@ -75,26 +81,39 @@ public class AllFunctions {
 	}
 
 	private static double calculateInformationGain(List<ObjectHistogram> objectHistograms) {
-		List<TimeSerie> d1 = new ArrayList<>();
-		List<TimeSerie> d2 = new ArrayList<>();
+		dt1 = new ArrayList<>();
+		dt2 = new ArrayList<>();
 		List<TimeSerie> all = new ArrayList<>();
 		double result = Double.MIN_VALUE; 
 		
 		List<Double> possibleValue = getPossibleValues(objectHistograms);
 		for (double d:possibleValue) {
-			split_dist = d;//meanDistance(objectHistograms);//d;
+			dt1.clear();
+			dt2.clear();
+			all.clear();
 			for (int i=0;i<objectHistograms.size();i++) {
 				ObjectHistogram elt = objectHistograms.get(i);
-				if (elt.getDistance()<split_dist)
-					d1.add(elt.getTimeSerie());
+				if (elt.getDistance()<d)
+					dt1.add(elt.getTimeSerie());
 				else
-					d2.add(elt.getTimeSerie());
+					dt2.add(elt.getTimeSerie());
 				all.add(elt.getTimeSerie());
 			}
-			double iid = ((d1.size()/all.size())*entropyBin(d1))+((d2.size()/all.size())*entropyBin(d2));
+			double iid = ((dt1.size()/all.size())*entropyBin(dt1))+((dt2.size()/all.size())*entropyBin(dt2));
 			double id = entropyBin(all);
-			result = Double.min(result, id-iid);
+			double a = result;
+			result = Double.max(result, id-iid);
+			if (a<result) 
+				split_dist = d;
+			else
+				break;
 		}
+		return result;
+	}
+
+	public static double computeObtimalSplitPoint(List<ObjectHistogram> objectHistograms) {
+		double result = 0f;
+		
 		return result;
 	}
 
@@ -210,6 +229,28 @@ public class AllFunctions {
 		return result;
 	}
 	
+	
+	public static boolean doTest(DecisionTree dt, TimeSerie test){
+		if (dt.getRight()!=null&&dt.getLeft()!=null) { 
+			double distance = subsequenceDistEuclidien(test, dt.getTimeSerie());
+			if (distance<dt.getSplitPoint())
+				return doTest(dt.getLeft(), test);
+			else
+				return doTest(dt.getRight(), test);
+		}
+		else 
+			return test.getObject_class() == dt.getObject_class();
+	}
+	
+	
+	public static List<Boolean> doTest(DecisionTree dt, Collection<TimeSerie> dataTest){
+		List<Boolean> result = new ArrayList<>();
+		Iterator<TimeSerie> data = dataTest.iterator();
+		while (data.hasNext()) 
+			result.add(doTest(dt, data.next()));
+		return result;
+	}
+	
 	public static double computeAccuracy(List<Boolean> result) {
 		double accuracy = 0f;
 		int i = 0;
@@ -228,6 +269,30 @@ public class AllFunctions {
 				i++;
 		error = Double.valueOf(i)/Double.valueOf(result.size());
 		return error;
-	}	
+	}
+	
+	public static int minlengh(Collection<TimeSerie> data) {
+		Iterator<TimeSerie> times = data.iterator();
+		int min = Integer.MAX_VALUE;//, max = 0;
+		while (times.hasNext()) {
+			TimeSerie ts = times.next();
+			min = Integer.min(min, ts.size());
+			//max = Integer.max(max, ts.size());
+		}
+		return min;
+	}
+	public static DecisionTree getTree(Collection<TimeSerie> data) {
+		DecisionTree result = null;
+		double d = entropyBin(data);
+		if (d == 0) 
+			return new DecisionTree((new ArrayList<TimeSerie>(data)).get(0).getObject_class());
+		int maxLen = minlengh(data);
+		int minLen = maxLen;
+		TimeSerie r = findShapeletBF(data, maxLen, minLen);
+		result = new DecisionTree(r, finalValue);
+		result.setLeft(getTree(dt1));
+		result.setRight(getTree(dt2));
+		return result;
+	}
 	
 }
