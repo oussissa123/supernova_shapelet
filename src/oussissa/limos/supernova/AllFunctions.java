@@ -354,7 +354,7 @@ public class AllFunctions {
 		for(int j=0; j<it.get(0).size();j++) {
 			List<TimeSerie> temp = new ArrayList<>(); 
 			for(int i = 0; i < values.size();i++) 
-				temp.add(it.get(j).get(i));
+				temp.add(it.get(i).get(j));
 			result.add(temp);
 		}
 		return result;
